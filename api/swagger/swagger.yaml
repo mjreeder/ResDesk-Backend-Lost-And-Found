@@ -1,0 +1,237 @@
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: ResDesk Lost and Found Service
+# during dev, should point to your local machine
+host: localhost:10017
+# basePath prefixes all resource paths
+basePath: /
+#
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /lostfound:
+    x-swagger-router-controller: LostFoundItemController
+    get:
+      summary: Returns all items
+      description: Returns all items
+      parameters:
+        - $ref: "#/parameters/AuthHeader"
+      operationId: getItems
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/LostFoundItemsResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    post:
+      summary: Creates a new lost and found item
+      description: Creates a new lost and found item
+      operationId: createItem
+      parameters:
+        - name: item
+          in: body
+          description: The lost and found item
+          required: true
+          schema:
+            $ref: "#/definitions/LostFoundItem"
+        - $ref: "#/parameters/AuthHeader"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/LostFoundItemResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /lostfound/return/{id}:
+    x-swagger-router-controller: LostFoundItemController
+    put:
+      summary: Return item
+      description: set item to returned true
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the lost and found item
+          required: true
+          type: string
+        - $ref: "#/parameters/AuthHeader"
+        - name: returnedTo
+          in: body
+          description: The person the item is returned to
+          required: true
+          schema:
+            $ref: "#/definitions/LostFoundReturn"
+      operationId: returnItem
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/LostFoundItemResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /lostfound/{id}:
+    x-swagger-router-controller: LostFoundItemController
+    get:
+      summary: Get item by id
+      description: Returns lost and found item by ID
+      operationId: getItemByID
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the lost and found item
+          required: true
+          type: string
+        - $ref: "#/parameters/AuthHeader"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/LostFoundItemResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    put:
+      summary: Update a lost and found item
+      description: Update a lost and found item
+      operationId: updateItem
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the lost and found item
+          required: true
+          type: string
+        - name: item
+          in: body
+          description: The lost and found item
+          required: true
+          schema:
+            $ref: "#/definitions/LostFoundUpdateItem"
+        - $ref: "#/parameters/AuthHeader"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/LostFoundItemResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    delete:
+      summary: Delete a lost and found item
+      description: Delete a lost and found item
+      operationId: deleteItem
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the lost and found item
+          required: true
+          type: string
+        - $ref: "#/parameters/AuthHeader"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/LostFoundItemResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+definitions:
+  LostFoundItem:
+    required:
+      - item
+    description: Lost and found item
+    properties:
+      item:
+        type: string
+      email:
+        type: ['string','null']
+      comments:
+        type: ['string','null']
+  LostFoundUpdateItem:
+    required:
+      - returnedTo
+    description: Lost and found update item
+    properties:
+      item:
+        type: string
+      email:
+        type: ['string','null']
+      comments:
+        type: ['string','null']
+      returned:
+        type: ['boolean','null']
+      returnedTo:
+        type: ['string','null']
+  LostFoundReturn:
+    required:
+      - returnedTo
+    description: Lost found return item
+    properties:
+      returnedTo:
+        type: ['string','null']
+        default: "Johny appleseed"
+  LostFoundItemResponse:
+    required:
+      - status
+      - error
+      - description
+      - data
+    properties:
+      status:
+        type: integer
+      error:
+        type: boolean
+      description:
+        type: string
+      data:
+        $ref: "#/definitions/LostFoundItem"
+  LostFoundItemsResponse:
+    required:
+      - status
+      - error
+      - description
+      - data
+    properties:
+      status:
+        type: integer
+      error:
+        type: boolean
+      description:
+        type: string
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/LostFoundItem"
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+parameters:
+  AuthHeader:
+    name: Authorization
+    in: header
+    description: the user JWT token
+    required: true
+    type: string
